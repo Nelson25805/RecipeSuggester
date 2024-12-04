@@ -1,3 +1,12 @@
+/*
+ * This java file handles asking the user for ingredients they wish to make a dish for.
+ * After asking for all ingredients from the user, it shows them dishes they can make with the ingredients.
+ * While also showing them the steps required to make it.
+ * 
+ * Author: Nelson McFadyen
+ * Last Updated: Dec, 04, 2024
+ */
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
