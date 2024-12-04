@@ -1,3 +1,9 @@
+/*
+ * This java file handles printing ascii artwork for the user to help visualize the task.
+ * 
+ * Author: Nelson McFadyen
+ * Last Updated: Dec, 04, 2024
+ */
 public class AsciiArt {
 
     // Method to display fridge ASCII art
