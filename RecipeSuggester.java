@@ -25,7 +25,7 @@ public class RecipeSuggester {
         System.setProperty("java.net.preferIPv4Stack", "true");
         List<String> ingredients = new ArrayList<>();
 
-        System.out.println("Welcome to the Recipe Manager!");
+        System.out.println("Welcome to the Recipe Suggester!");
         System.out.println();
 
         // Use the AsciiArt class to display the fridge
@@ -59,7 +59,6 @@ public class RecipeSuggester {
         // Fetch recipes
         try {
             String response = sendHttpRequest(ingredientQuery);
-            System.out.println("Recipes that can be made with the given ingredients:");
             displayRecipes(response);
         } catch (Exception e) {
             System.out.println("Error fetching recipes: " + e.getMessage());
