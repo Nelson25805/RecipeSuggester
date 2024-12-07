@@ -1,7 +1,7 @@
 /*
  * This java file handles asking the user for a main ingredient they wish to make a dish for.
  * If no recipes are found for the given ingredient, it prompts the user to enter another one.
- * Once a valid ingredient is found, it shows dishes that can be made with it.
+ * Once a valid ingredient is found, it shows dishes that can be made with it and allows the user to select one to see detailed information.
  * 
  * Author: Nelson McFadyen
  * Last Updated: Dec, 06, 2024
@@ -12,11 +12,14 @@
  import java.net.HttpURLConnection;
  import java.net.URI;
  import java.net.URL;
+ import java.util.ArrayList;
+ import java.util.List;
  import java.util.Scanner;
  
  public class RecipeSuggester {
  
      private static final String API_URL = "https://www.themealdb.com/api/json/v1/1/filter.php?i=";
+     private static final String RECIPE_DETAILS_URL = "https://www.themealdb.com/api/json/v1/1/lookup.php?i=";
  
      public static void main(String[] args) {
          // Force IPv4
@@ -45,14 +48,15 @@
                  System.out.println("Searching for recipes with: " + mainIngredient + "...");
  
                  try {
-                     String response = sendHttpRequest(mainIngredient);
+                     String response = sendHttpRequest(API_URL + mainIngredient);
  
                      if (response.contains("\"meals\":null")) {
                          System.out.println("No recipes found with the ingredient: " + mainIngredient);
                          System.out.println("Please enter a different ingredient.");
                      } else {
-                         displayRecipes(response);
+                         List<String[]> recipes = displayRecipes(response);
                          validIngredientFound = true;
+                         promptRecipeSelection(recipes, scanner);
                      }
  
                  } catch (Exception e) {
@@ -63,9 +67,7 @@
      }
  
      // Method to send HTTP request
-     private static String sendHttpRequest(String ingredient) throws Exception {
-         String urlString = API_URL + ingredient;
- 
+     private static String sendHttpRequest(String urlString) throws Exception {
          // Create a URI and convert it to a URL
          URI uri = new URI(urlString);
          URL url = uri.toURL();
@@ -89,13 +91,72 @@
      }
  
      // Method to display recipes from the JSON response
-     private static void displayRecipes(String jsonResponse) {
+     private static List<String[]> displayRecipes(String jsonResponse) {
          System.out.println("Recipes that can be made with the given ingredient:");
          String[] meals = jsonResponse.split("\"strMeal\":\"");
+         List<String[]> recipes = new ArrayList<>();
+ 
          for (int i = 1; i < meals.length; i++) {
              String meal = meals[i].split("\"")[0];  // Extract recipe name
-             System.out.println("- " + meal);
+             String id = meals[i].split("\"idMeal\":\"")[1].split("\"")[0];  // Extract recipe ID
+             recipes.add(new String[]{meal, id});
+             System.out.println(i + ". " + meal);
+         }
+         return recipes;
+     }
+ 
+     // Method to prompt the user to select a recipe for more details
+     private static void promptRecipeSelection(List<String[]> recipes, Scanner scanner) {
+         System.out.println("\nEnter the number of the recipe you want to see more details for:");
+         int choice;
+ 
+         while (true) {
+             try {
+                 System.out.print("Choice: ");
+                 choice = Integer.parseInt(scanner.nextLine().trim());
+ 
+                 if (choice < 1 || choice > recipes.size()) {
+                     System.out.println("Invalid choice. Please select a valid recipe number.");
+                 } else {
+                     break;
+                 }
+ 
+             } catch (NumberFormatException e) {
+                 System.out.println("Invalid input. Please enter a number.");
+             }
+         }
+ 
+         String[] selectedRecipe = recipes.get(choice - 1);
+         fetchRecipeDetails(selectedRecipe[1]);
+     }
+ 
+     // Method to fetch and display detailed information about a recipe
+     private static void fetchRecipeDetails(String recipeId) {
+         System.out.println("Fetching details for the selected recipe...");
+ 
+         try {
+             String response = sendHttpRequest(RECIPE_DETAILS_URL + recipeId);
+ 
+             // Display detailed information
+             String meal = response.split("\"strMeal\":\"")[1].split("\"")[0];
+             String instructions = response.split("\"strInstructions\":\"")[1].split("\",\"")[0];
+ 
+             System.out.println("\nRecipe: " + meal);
+             System.out.println("Instructions:\n" + formatInstructions(instructions));
+ 
+         } catch (Exception e) {
+             System.out.println("Error fetching recipe details: " + e.getMessage());
          }
      }
+ 
+     // Helper method to format instructions for better readability
+private static String formatInstructions(String instructions) {
+    return instructions
+            .replace("\\r\\n", "\n") // Handle Windows-style newlines
+            .replace("\\n", "\n")    // Handle other newline styles
+            .replaceAll("\\\\", "")  // Remove extraneous backslashes
+            .trim();                 // Trim leading and trailing whitespace
+}
+
  }
  
