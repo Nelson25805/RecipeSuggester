@@ -149,14 +149,41 @@ public class RecipeSuggester {
         }
     }
 
-    // Helper method to format instructions for better readability
+    // Helper method to format instructions for better readability and consistent
+    // numbering
     private static String formatInstructions(String instructions) {
-        return instructions
+        // Clean and normalize the text
+        String cleanedInstructions = instructions
                 .replace("\\r\\n", "\n") // Replace Windows-style newlines
                 .replace("\\n", "\n") // Replace other newline styles
                 .replaceAll("\\\\u00d7", "x") // Replace Unicode multiplication symbol
+                .replaceAll("\\\\u200b", "") // Remove zero-width spaces
+                .replaceAll("\\\\t|\\t", "") // Remove escaped tabs and actual tab characters
                 .replaceAll("\\\\", "") // Remove extraneous backslashes
                 .trim(); // Remove leading and trailing whitespace
+
+        // Split the instructions into lines
+        String[] steps = cleanedInstructions.split("\n");
+
+        // Ensure all instructions are numbered with consistent spacing
+        StringBuilder numberedInstructions = new StringBuilder();
+        int stepNumber = 1;
+
+        for (String step : steps) {
+            step = step.trim();
+            if (!step.isEmpty()) {
+                // Ensure consistent formatting for already numbered steps
+                if (step.matches("^\\d+\\.\\s*.*")) {
+                    step = step.replaceAll("^\\d+\\.\\s*", stepNumber + ". "); // Renumber and normalize
+                } else {
+                    step = stepNumber + ". " + step; // Add new numbering
+                }
+                numberedInstructions.append(step).append("\n");
+                stepNumber++;
+            }
+        }
+
+        return numberedInstructions.toString().trim();
     }
 
 }
