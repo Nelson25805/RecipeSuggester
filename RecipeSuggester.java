@@ -155,35 +155,32 @@ public class RecipeSuggester {
         // Clean and normalize the text
         String cleanedInstructions = instructions
                 .replace("\\r\\n", "\n") // Replace Windows-style newlines
-                .replace("\\n", "\n") // Replace other newline styles
+                .replace("\\n", "\n")   // Replace other newline styles
                 .replaceAll("\\\\u00d7", "x") // Replace Unicode multiplication symbol
                 .replaceAll("\\\\u200b", "") // Remove zero-width spaces
                 .replaceAll("\\\\t|\\t", "") // Remove escaped tabs and actual tab characters
-                .replaceAll("\\\\", "") // Remove extraneous backslashes
+                .replaceAll("\\\\", "")      // Remove extraneous backslashes
                 .trim(); // Remove leading and trailing whitespace
-
-        // Split the instructions into lines
-        String[] steps = cleanedInstructions.split("\n");
-
+    
+        // Split into steps based on existing newlines or sentence-ending punctuation
+        String[] steps = cleanedInstructions.split("(?<=[.!?])\\s+(?=[A-Z0-9])"); 
+    
         // Ensure all instructions are numbered with consistent spacing
         StringBuilder numberedInstructions = new StringBuilder();
         int stepNumber = 1;
-
+    
         for (String step : steps) {
             step = step.trim();
             if (!step.isEmpty()) {
-                // Ensure consistent formatting for already numbered steps
-                if (step.matches("^\\d+\\.\\s*.*")) {
-                    step = step.replaceAll("^\\d+\\.\\s*", stepNumber + ". "); // Renumber and normalize
-                } else {
-                    step = stepNumber + ". " + step; // Add new numbering
+                // Add numbering if not already numbered
+                if (!step.matches("^\\d+\\.\\s.*")) {
+                    step = stepNumber + ". " + step;
                 }
                 numberedInstructions.append(step).append("\n");
                 stepNumber++;
             }
         }
-
+    
         return numberedInstructions.toString().trim();
     }
-
 }
