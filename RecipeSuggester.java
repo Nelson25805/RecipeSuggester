@@ -8,6 +8,7 @@
  */
 
 import java.io.BufferedReader;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -137,12 +138,17 @@ public class RecipeSuggester {
         try {
             String response = sendHttpRequest(RECIPE_DETAILS_URL + recipeId);
 
-            // Display detailed information
+            // Extract and display detailed information
             String meal = response.split("\"strMeal\":\"")[1].split("\"")[0];
             String instructions = response.split("\"strInstructions\":\"")[1].split("\",\"")[0];
 
+            String formattedInstructions = formatInstructions(instructions);
+
             System.out.println("\nRecipe: " + meal);
-            System.out.println("Instructions:\n" + formatInstructions(instructions));
+            System.out.println("Instructions:\n" + formattedInstructions);
+
+            // Prompt user to save the recipe
+            saveRecipeToFile(meal, formattedInstructions);
 
         } catch (Exception e) {
             System.out.println("Error fetching recipe details: " + e.getMessage());
@@ -155,20 +161,20 @@ public class RecipeSuggester {
         // Clean and normalize the text
         String cleanedInstructions = instructions
                 .replace("\\r\\n", "\n") // Replace Windows-style newlines
-                .replace("\\n", "\n")   // Replace other newline styles
+                .replace("\\n", "\n") // Replace other newline styles
                 .replaceAll("\\\\u00d7", "x") // Replace Unicode multiplication symbol
                 .replaceAll("\\\\u200b", "") // Remove zero-width spaces
                 .replaceAll("\\\\t|\\t", "") // Remove escaped tabs and actual tab characters
-                .replaceAll("\\\\", "")      // Remove extraneous backslashes
+                .replaceAll("\\\\", "") // Remove extraneous backslashes
                 .trim(); // Remove leading and trailing whitespace
-    
+
         // Split into steps based on existing newlines or sentence-ending punctuation
-        String[] steps = cleanedInstructions.split("(?<=[.!?])\\s+(?=[A-Z0-9])"); 
-    
+        String[] steps = cleanedInstructions.split("(?<=[.!?])\\s+(?=[A-Z0-9])");
+
         // Ensure all instructions are numbered with consistent spacing
         StringBuilder numberedInstructions = new StringBuilder();
         int stepNumber = 1;
-    
+
         for (String step : steps) {
             step = step.trim();
             if (!step.isEmpty()) {
@@ -180,7 +186,30 @@ public class RecipeSuggester {
                 stepNumber++;
             }
         }
-    
+
         return numberedInstructions.toString().trim();
     }
+
+    private static void saveRecipeToFile(String recipeName, String instructions) {
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("\nWould you like to save this recipe for later? (yes/no)");
+            String userResponse = scanner.nextLine().trim().toLowerCase();
+
+            if (userResponse.equals("yes")) {
+                // Format the file name to avoid illegal characters
+                String fileName = recipeName.replaceAll("[^a-zA-Z0-9\\s]", "").replace(" ", "_") + ".txt";
+
+                try (FileWriter writer = new FileWriter(fileName)) {
+                    writer.write("Recipe: " + recipeName + "\n\n");
+                    writer.write("Instructions:\n" + instructions);
+                    System.out.println("Recipe saved to file: " + fileName);
+                } catch (Exception e) {
+                    System.out.println("Error saving the recipe: " + e.getMessage());
+                }
+            } else {
+                System.out.println("Recipe not saved.");
+            }
+        }
+    }
+
 }
