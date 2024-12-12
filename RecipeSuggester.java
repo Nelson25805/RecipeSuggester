@@ -198,7 +198,7 @@ public class RecipeSuggester {
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.println("\nWould you like to save this recipe for later? (yes/no)");
             String userResponse = scanner.nextLine().trim().toLowerCase();
-
+    
             if (userResponse.equals("yes")) {
                 // Create a Recipes directory if it doesn't exist
                 java.io.File recipesDir = new java.io.File("Recipes");
@@ -210,11 +210,20 @@ public class RecipeSuggester {
                         return;
                     }
                 }
-
-                // Format the file name to avoid illegal characters
-                String fileName = recipeName.replaceAll("[^a-zA-Z0-9\\s]", "").replace(" ", "_") + ".txt";
+    
+                // Format the base file name to avoid illegal characters
+                String baseFileName = recipeName.replaceAll("[^a-zA-Z0-9\\s]", "").replace(" ", "_");
+                String fileName = baseFileName + ".txt";
                 java.io.File recipeFile = new java.io.File(recipesDir, fileName);
-
+    
+                // Check for duplicates and append a number if necessary
+                int counter = 1;
+                while (recipeFile.exists()) {
+                    fileName = baseFileName + "_" + counter + ".txt";
+                    recipeFile = new java.io.File(recipesDir, fileName);
+                    counter++;
+                }
+    
                 try (FileWriter writer = new FileWriter(recipeFile)) {
                     writer.write("Recipe: " + recipeName + "\n\n");
                     writer.write("Instructions:\n" + instructions);
@@ -227,5 +236,4 @@ public class RecipeSuggester {
             }
         }
     }
-
 }
