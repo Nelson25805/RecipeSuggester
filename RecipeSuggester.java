@@ -163,6 +163,10 @@ public class RecipeSuggester {
                 .replace("\\r\\n", "\n") // Replace Windows-style newlines
                 .replace("\\n", "\n") // Replace other newline styles
                 .replaceAll("\\\\u00d7", "x") // Replace Unicode multiplication symbol
+                .replaceAll("\\\\u00b0", "\u00B0") // Replace degree symbol
+                .replaceAll("\\\\u2013", "-") // Replace dash symbol
+                .replaceAll("\\\\u00e9", "\u00E9") // Replace french e
+                .replaceAll("\\\\u2019", "'") // Replace '
                 .replaceAll("\\\\u200b", "") // Remove zero-width spaces
                 .replaceAll("\\\\t|\\t", "") // Remove escaped tabs and actual tab characters
                 .replaceAll("\\\\", "") // Remove extraneous backslashes
