@@ -167,25 +167,48 @@ public class RecipeSuggester {
 
     private static void fetchRecipeDetails(String recipeId, Scanner scanner) {
         System.out.println("Fetching details for the selected recipe...");
-    
+
         try {
             String response = sendHttpRequest(RECIPE_DETAILS_URL + recipeId);
-    
+
+            // Extract recipe details
             String meal = response.split("\"strMeal\":\"")[1].split("\"")[0];
             String instructions = response.split("\"strInstructions\":\"")[1].split("\",\"")[0];
-    
+            String mealThumb = response.split("\"strMealThumb\":\"")[1].split("\"")[0];
+
+            // Extract ingredients and measures
+            List<String> ingredients = new ArrayList<>();
+            for (int i = 1; i <= 20; i++) {
+                String ingredientKey = "\"strIngredient" + i + "\":\"";
+                String measureKey = "\"strMeasure" + i + "\":\"";
+
+                if (response.contains(ingredientKey) && response.contains(measureKey)) {
+                    String ingredient = response.split(ingredientKey)[1].split("\"")[0];
+                    String measure = response.split(measureKey)[1].split("\"")[0];
+                    if (!ingredient.isBlank() && !measure.isBlank()) {
+                        ingredients.add(measure + " " + ingredient);
+                    }
+                }
+            }
+
             String formattedInstructions = formatInstructions(instructions);
-    
+
+            // Display recipe details
             System.out.println("\nRecipe: " + meal);
-            System.out.println("Instructions:\n" + formattedInstructions);
-    
-            saveRecipeToFile(meal, formattedInstructions, scanner);
-    
+            System.out.println("Ingredients:");
+            for (String ingredient : ingredients) {
+                System.out.println("- " + ingredient);
+            }
+            System.out.println("\nInstructions:\n" + formattedInstructions);
+            System.out.println("\nRecipe Thumbnail: " + mealThumb);
+
+            // Save recipe to file
+            saveRecipeToFile(meal, formattedInstructions, ingredients, mealThumb, scanner);
+
         } catch (Exception e) {
             System.out.println("Error fetching recipe details: " + e.getMessage());
         }
     }
-    
 
     private static String formatInstructions(String instructions) {
         String cleanedInstructions = instructions
@@ -220,19 +243,16 @@ public class RecipeSuggester {
         return numberedInstructions.toString().trim();
     }
 
-    private static void saveRecipeToFile(String recipeName, String instructions, Scanner scanner) {
+    private static void saveRecipeToFile(String recipeName, String instructions, List<String> ingredients,
+            String thumbnailUrl, Scanner scanner) {
         System.out.println("\nWould you like to save this recipe for later? (yes/no)");
         String userResponse = scanner.nextLine().trim().toLowerCase();
 
         if ("yes".equals(userResponse)) {
             java.io.File recipesDir = new java.io.File("Recipes");
-            if (!recipesDir.exists()) {
-                if (recipesDir.mkdir()) {
-                    System.out.println("Created directory: Recipes");
-                } else {
-                    System.out.println("Failed to create directory: Recipes");
-                    return;
-                }
+            if (!recipesDir.exists() && !recipesDir.mkdir()) {
+                System.out.println("Failed to create directory: Recipes");
+                return;
             }
 
             String baseFileName = recipeName.replaceAll("[^a-zA-Z0-9\\s]", "").replace(" ", "_");
@@ -248,7 +268,12 @@ public class RecipeSuggester {
 
             try (FileWriter writer = new FileWriter(recipeFile)) {
                 writer.write("Recipe: " + recipeName + "\n\n");
-                writer.write("Instructions:\n" + instructions);
+                writer.write("Ingredients:\n");
+                for (String ingredient : ingredients) {
+                    writer.write("- " + ingredient + "\n");
+                }
+                writer.write("\nInstructions:\n" + instructions + "\n\n");
+                writer.write("Recipe Thumbnail: " + thumbnailUrl + "\n");
                 System.out.println("Recipe saved to file: " + recipeFile.getAbsolutePath());
             } catch (Exception e) {
                 System.out.println("Error saving the recipe: " + e.getMessage());
