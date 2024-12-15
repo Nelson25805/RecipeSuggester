@@ -11,8 +11,8 @@ public class AsciiArt {
         String fridge = """
          _______________________
         |                       |
-        |  What ingredients do  |
-        |       you have?       |
+        | What can we help make |
+        |     for you today?    |
         |                    () |
         |_______________________|
         |_______________________|
