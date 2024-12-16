@@ -17,8 +17,10 @@ public class RecipeSuggester {
         // Force IPv4
         System.setProperty("java.net.preferIPv4Stack", "true");
 
+        System.out.println();
         System.out.println("Welcome to the Recipe Suggester!");
         System.out.println();
+        AsciiArt.showFridgeArt();
 
         // Use the AsciiArt class to display the fridge (if available)
         // AsciiArt.showFridgeArt();
